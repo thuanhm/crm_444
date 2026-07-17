@@ -172,7 +172,7 @@ export default function Home() {
             <div className="stat-grid">
               <div className="stat-card">
                 <div className="num">{(s.leadGiao || 0).toLocaleString('vi-VN')}</div>
-                <div className="lbl">Lead đã phân giao</div>
+                <div className="lbl">Lead đã phân giao RM</div>
               </div>
               <div className="stat-card">
                 <div className="num">{(s.leadTuongTac || 0).toLocaleString('vi-VN')}</div>
