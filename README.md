@@ -99,6 +99,18 @@ build và deploy phiên bản mới, có sẵn URL dạng `https://<ten-project>
   số liệu" để xem trước, "Lưu vào bảng xếp hạng" để công bố. Có thể xóa hẳn một kỳ nếu cần làm
   lại từ đầu.
 
+## Di chuyển (migrate) dữ liệu các kỳ đã tải trước khi có bản cập nhật đối chiếu theo mã phòng
+
+Các kỳ đã tải **trước khi** hệ thống đổi sang đối chiếu theo mã phòng (thay vì tên phòng) đang
+lưu dữ liệu ở định dạng cũ, không tương thích với cách tính mới. Hệ thống tự phát hiện việc này
+(qua `schemaVersion` gắn trên mỗi file đã xử lý) và sẽ **không** cho dùng lại các file ở định
+dạng cũ — ô tương ứng hiện "Dữ liệu cũ — cần tải lại" (màu cam) thay vì "Đã có" (màu xanh).
+
+**Cách xử lý:** với mỗi kỳ đã tải trước đó, vào Quản trị, chọn lại đúng tháng đó, rồi tải lại
+**đủ cả 5 file gốc** của kỳ đó (không thể chỉ tải 1 file rồi dùng lại 4 file cũ, vì 4 file cũ
+không dùng được nữa). Sau khi lưu, kỳ đó sẽ ở định dạng mới và từ lần sau có thể sửa từng file
+riêng lẻ bình thường. Các kỳ tạo mới từ bây giờ trở đi không bị ảnh hưởng.
+
 ## Đối chiếu Phòng bằng MÃ PHÒNG (không dùng tên phòng)
 
 4 file CRM và file danh sách biên chế được đối chiếu theo **mã phòng**, không theo tên phòng —

@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
-import { FILE_TYPES, buildPartialFromAOA, validateAOA, combinePartials, monthLabel } from '../lib/aggregate';
+import { FILE_TYPES, buildPartialFromAOA, validateAOA, combinePartials, monthLabel, PARTIAL_SCHEMA_VERSION } from '../lib/aggregate';
+
+function isUsable(existing) {
+  return !!existing && existing.data?.schemaVersion === PARTIAL_SCHEMA_VERSION;
+}
 
 function readFileAsAOA(file) {
   return new Promise((resolve, reject) => {
@@ -159,12 +163,12 @@ export default function Admin() {
 
     const missing = [];
     FILE_TYPES.forEach((def, i) => {
-      if (!files[i] && !existingPartials[def.type]) missing.push(def.label);
+      if (!files[i] && !isUsable(existingPartials[def.type])) missing.push(def.label);
     });
     if (missing.length) {
       setMsg({
         type: 'error',
-        text: `Thiếu dữ liệu cho: ${missing.join(', ')}. Đây là các file chưa từng tải cho kỳ này — bắt buộc phải chọn file lần đầu.`,
+        text: `Thiếu dữ liệu cho: ${missing.join(', ')}. Đây là các file chưa từng tải cho kỳ này, hoặc đã tải từ trước khi hệ thống đổi cách đối chiếu theo mã phòng — cần chọn lại file.`,
       });
       return;
     }
@@ -336,15 +340,20 @@ export default function Admin() {
                 <div style={{ marginTop: 16 }}>
                   {FILE_TYPES.map((def, i) => {
                     const existing = existingPartials[def.type];
+                    const usable = isUsable(existing);
+                    const outdated = existing && !usable;
                     const hasNewFile = !!files[i];
                     let statusText = '—';
                     let statusOk = false;
                     if (hasNewFile) {
                       statusText = 'File mới';
                       statusOk = true;
-                    } else if (existing) {
+                    } else if (usable) {
                       statusText = `Đã có (${formatDateTime(existing.uploadedAt)})`;
                       statusOk = true;
+                    } else if (outdated) {
+                      statusText = 'Dữ liệu cũ — cần tải lại';
+                      statusOk = false;
                     } else if (loadingExisting) {
                       statusText = 'Đang kiểm tra...';
                     } else {
@@ -355,7 +364,15 @@ export default function Admin() {
                         <div className="tag">{i + 1}</div>
                         <div className="info">
                           <div className="t">{def.label}</div>
-                          <div className="s">{hasNewFile ? files[i].name : existing ? 'Dùng lại dữ liệu đã lưu, hoặc chọn file mới để thay thế' : 'Chưa chọn file'}</div>
+                          <div className="s">
+                            {hasNewFile
+                              ? files[i].name
+                              : outdated
+                              ? 'File này được tải từ trước khi hệ thống đổi cách đối chiếu theo mã phòng — chọn lại file gốc để cập nhật'
+                              : usable
+                              ? 'Dùng lại dữ liệu đã lưu, hoặc chọn file mới để thay thế'
+                              : 'Chưa chọn file'}
+                          </div>
                         </div>
                         <label className="pick" htmlFor={`f${i}`}>
                           {existing ? 'Thay file' : 'Chọn file'}
@@ -367,7 +384,7 @@ export default function Admin() {
                           accept=".xlsx,.xls"
                           onChange={(e) => onPick(i, e.target.files[0])}
                         />
-                        <div className={`status ${statusOk ? 'ok' : ''}`}>{statusText}</div>
+                        <div className={`status ${statusOk ? 'ok' : outdated ? 'warn' : ''}`}>{statusText}</div>
                       </div>
                     );
                   })}
