@@ -23,3 +23,12 @@ CREATE TABLE IF NOT EXISTS thidua_partials (
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (month_key, file_type)
 );
+
+-- Ghi lại các lần đăng nhập sai để chặn brute-force mật khẩu quản trị.
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id SERIAL PRIMARY KEY,
+  ip TEXT NOT NULL,
+  attempted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON login_attempts (ip, attempted_at DESC);

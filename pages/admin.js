@@ -1,17 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import * as XLSX from 'xlsx';
 import { FILE_TYPES, buildPartialFromAOA, validateAOA, combinePartials, monthLabel, PARTIAL_SCHEMA_VERSION } from '../lib/aggregate';
 
 function isUsable(existing) {
   return !!existing && existing.data?.schemaVersion === PARTIAL_SCHEMA_VERSION;
 }
 
+// Nạp thư viện xlsx (~500KB) chỉ khi admin thực sự bắt đầu xử lý file, thay vì tải sẵn ngay khi
+// vào trang (kể cả trước khi đăng nhập) — giảm đáng kể dung lượng JS ban đầu của trang quản trị.
+let xlsxModulePromise = null;
+function loadXLSX() {
+  if (!xlsxModulePromise) xlsxModulePromise = import('xlsx');
+  return xlsxModulePromise;
+}
+
 function readFileAsAOA(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await loadXLSX();
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];

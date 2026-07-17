@@ -192,6 +192,34 @@ trong màn hình xử lý để admin kiểm tra lại trước khi lưu.
 **Xem lũy kế nhiều kỳ**: số liệu thô được cộng dồn qua các tháng đã chọn; Số RM dùng để chia lấy
 bình quân các kỳ có dữ liệu biên chế (giả định biên chế ít biến động giữa các tháng liền kề).
 
+## Bảo mật và hiệu năng đã áp dụng
+
+> **Cần chạy lại `db/schema.sql` trong Neon SQL Editor một lần** (an toàn, dùng `IF NOT EXISTS`)
+> để tạo thêm bảng `login_attempts` phục vụ chống dò mật khẩu bên dưới — nếu bỏ qua, trang quản
+> trị vẫn hoạt động bình thường (tự bỏ qua bước kiểm tra khoá nếu bảng chưa tồn tại) nhưng sẽ
+> chưa có lớp bảo vệ này.
+
+- **Chống dò mật khẩu (brute-force):** đăng nhập sai quá 5 lần trong 15 phút từ cùng một IP sẽ bị
+  khoá tạm 15 phút (bảng `login_attempts`, tự dọn dần qua thời gian). So sánh mật khẩu dùng
+  `crypto.timingSafeEqual` (constant-time), tránh lộ thông tin qua độ trễ phản hồi.
+- **HTTP security headers:** `X-Frame-Options: DENY` (chống nhúng iframe/clickjacking),
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` (tắt camera/mic/vị
+  trí không dùng đến) áp dụng cho toàn bộ site qua `next.config.js`.
+- **Cache API công khai:** `/api/months` và `/api/data/*` cache 60 giây ở CDN của Vercel (kèm
+  stale-while-revalidate 300 giây) — giảm số lần gọi thẳng vào Neon khi nhiều người cùng xem bảng
+  xếp hạng. Nghĩa là sau khi admin lưu dữ liệu mới, có thể mất tới ~1 phút để trang công khai cập
+  nhật (chấp nhận được vì dữ liệu chỉ đổi theo kỳ tháng, không cần tức thời).
+- **Tải chậm (lazy-load) thư viện xlsx:** thư viện đọc Excel (~500KB) chỉ được tải khi admin thực
+  sự bắt đầu xử lý file, không tải sẵn lúc vào trang — giảm dung lượng JS ban đầu của trang quản
+  trị từ 115KB xuống còn ~4KB.
+
+**Đã cân nhắc nhưng KHÔNG áp dụng:** chuyển font sang tự host bằng `next/font` (giảm 1 vòng kết
+nối mạng ra Google Fonts) — vì môi trường build thử của tôi không có quyền truy cập
+`fonts.googleapis.com` nên không tự kiểm chứng được thay đổi này có build thành công thật sự hay
+không. Giữ nguyên cách tải qua thẻ `<link>` đã được kiểm chứng hoạt động ổn định, tránh rủi ro làm
+hỏng bản deploy thật. Nếu muốn tối ưu thêm bước này, có thể thử `next/font/google` sau và tự build
+thử trên máy có mạng đầy đủ trước khi deploy.
+
 ## Giới hạn cần lưu ý
 
 - Đăng nhập admin dùng một mật khẩu dùng chung (không phải tài khoản cá nhân từng người) — phù

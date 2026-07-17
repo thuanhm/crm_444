@@ -70,7 +70,7 @@ export default function CanhBao() {
             <div className="eyebrow">VietinBank · Chi nhánh Bắc Nghệ An</div>
             <div className="title">Cảnh báo cán bộ điểm thi đua thấp</div>
             <div className="subtitle">
-              Danh sách RM có điểm thi đua thấp hơn 30% điểm bình quân/RM toàn chi nhánh trong kỳ — xét trừ 2 điểm KPI + không xét thi đua năm 2026.
+              Danh sách RM có điểm thi đua thấp hơn 30% điểm bình quân/RM toàn chi nhánh trong kỳ — xem xét trừ 2 điểm KPI + không xét thi đua năm 2026.
             </div>
           </div>
           <div className="nav">

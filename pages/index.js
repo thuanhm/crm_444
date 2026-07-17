@@ -111,7 +111,7 @@ export default function Home() {
             <div className="title">CRM1.0 Transformation 2026 — Đổi hành vi, tăng hiệu quả</div>
             <div className="subtitle">
               Bảng điểm thi đua triển khai CRM 1.0 — cập nhật theo từng kỳ tháng, tính theo
-              Phòng/PGD và RM.
+              Phòng/PGD và cán bộ RM.
             </div>
           </div>
           <div className="nav">
