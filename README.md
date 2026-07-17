@@ -80,8 +80,9 @@ build và deploy phiên bản mới, có sẵn URL dạng `https://<ten-project>
 
 - **Trang chủ (`/`)**: công khai, không cần đăng nhập. Chọn kỳ tháng để xem bảng xếp hạng theo
   Phòng/PGD và theo cán bộ RM, có ô tìm kiếm và tùy chọn xem lũy kế tất cả các kỳ.
-- **Trang quản trị (`/admin`)**: đăng nhập bằng `ADMIN_PASSWORD`, chọn tháng áp dụng, tải đủ **5**
-  file Excel theo đúng thứ tự:
+- **Trang quản trị (`/admin`)**: đăng nhập bằng `ADMIN_PASSWORD`, chọn tháng áp dụng.
+
+  **Tạo kỳ mới:** cần tải đủ **5** file Excel theo đúng thứ tự:
   1. Báo cáo trạng thái Lead
   2. Báo cáo trạng thái OPP
   3. Tiếp cận tương tác Lead
@@ -90,8 +91,20 @@ build và deploy phiên bản mới, có sẵn URL dạng `https://<ten-project>
      cột định danh RM (chấp nhận các tên: `RM quản lý`, `RM`, `Mã CB`, `Mã cán bộ`, `Mã nhân viên`,
      `User RM`, `Username`, `User name` — hệ thống tự nhận diện cột đầu tiên khớp).
 
-  Sau khi bấm "Xử lý số liệu" để xem trước, bấm "Lưu vào bảng xếp hạng" để công bố. Có thể xóa dữ
-  liệu một kỳ bất kỳ nếu cần sửa lại.
+  **Sửa kỳ đã có (KHÔNG cần tải lại đủ 5 file):** chọn tháng đã có dữ liệu (hoặc bấm "Sửa" ở danh
+  sách bên phải), mỗi ô file sẽ hiện "Đã có (ngày giờ tải)" nếu từng tải trước đó. Chỉ cần chọn
+  lại file nào cần cập nhật — các file không chọn sẽ tự dùng dữ liệu đã lưu lần trước. Bấm "Xử lý
+  số liệu" để xem trước, "Lưu vào bảng xếp hạng" để công bố. Có thể xóa hẳn một kỳ nếu cần làm
+  lại từ đầu.
+
+## Vì sao có thể sửa từng file riêng lẻ mà vẫn an toàn dữ liệu khách hàng
+
+Mỗi file trong 5 file được xử lý **ngay trên trình duyệt** của admin thành một "partial" — số
+liệu đã tổng hợp theo Phòng/RM (số lượng Lead, Opp, tỷ lệ...) — **trước khi** gửi lên server.
+Partial này **không chứa** tên khách hàng, CIF, hay mã số thuế. Server chỉ lưu các partial đã ẩn
+danh này, nên khi cần lấy lại dữ liệu của 4 file không đổi để gộp cùng 1 file mới, hệ thống lấy
+lại đúng các partial đó — dữ liệu khách hàng gốc chưa từng và sẽ không bao giờ được lưu trên
+server.
 
 ## Công thức tính điểm (đúng theo Công văn 7087)
 
@@ -120,8 +133,9 @@ bình quân các kỳ có dữ liệu biên chế (giả định biên chế ít
 
 - Đăng nhập admin dùng một mật khẩu dùng chung (không phải tài khoản cá nhân từng người) — phù
   hợp với quy mô một chi nhánh, không phù hợp nếu cần phân quyền nhiều admin có nhật ký riêng.
-- File Excel được đọc và tính điểm ngay trên trình duyệt của admin (không gửi file thô lên
-  server), chỉ kết quả đã tính (JSON, lưu vào cột JSONB) được ghi vào Neon Postgres.
+- File Excel được đọc và tính điểm ngay trên trình duyệt của admin; chỉ số liệu đã tổng hợp theo
+  Phòng/RM (không có tên khách hàng/CIF/MST) mới được lưu vào Neon Postgres — kể cả khi dùng tính
+  năng sửa từng file riêng lẻ.
 - Điểm Phòng phụ thuộc vào chất lượng file danh sách biên chế RM (file #5) — nếu file này thiếu
   hoặc sai tên phòng so với 4 file CRM còn lại, điểm Phòng tương ứng sẽ hiển thị "—" thay vì một
   số liệu không chính xác.

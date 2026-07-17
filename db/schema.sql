@@ -1,6 +1,7 @@
--- Chạy file này MỘT LẦN trong Neon SQL Editor (hoặc bất kỳ công cụ Postgres nào bạn dùng
--- để kết nối tới Neon) trước khi dùng website. Tạo bảng lưu điểm thi đua CRM1.0 theo từng kỳ.
+-- Chạy file này trong Neon SQL Editor (hoặc bất kỳ công cụ Postgres nào) trước khi dùng
+-- website. An toàn khi chạy lại nhiều lần (dùng IF NOT EXISTS).
 
+-- Bảng lưu kết quả CUỐI CÙNG đã tính điểm của mỗi kỳ (dùng để hiển thị công khai).
 CREATE TABLE IF NOT EXISTS thidua_data (
   month_key   TEXT PRIMARY KEY,        -- dạng 'YYYY-MM', vd '2026-08'
   label       TEXT NOT NULL,           -- nhãn hiển thị, vd 'Tháng 8/2026'
@@ -10,5 +11,15 @@ CREATE TABLE IF NOT EXISTS thidua_data (
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Chỉ mục phụ trợ để tra cứu nhanh theo thời gian tải lên (không bắt buộc nhưng hữu ích).
 CREATE INDEX IF NOT EXISTS idx_thidua_data_uploaded_at ON thidua_data (uploaded_at DESC);
+
+-- Bảng lưu "partial" của TỪNG file trong 5 file, để admin có thể sửa/tải lại một file riêng lẻ
+-- mà không cần tải lại cả 5 file. Partial chỉ chứa số liệu đã tổng hợp theo Phòng/RM — KHÔNG
+-- chứa tên khách hàng, CIF, hay mã số thuế.
+CREATE TABLE IF NOT EXISTS thidua_partials (
+  month_key   TEXT NOT NULL,
+  file_type   TEXT NOT NULL CHECK (file_type IN ('lead_status', 'opp_status', 'lead_int', 'opp_int', 'roster')),
+  partial     JSONB NOT NULL,
+  uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (month_key, file_type)
+);

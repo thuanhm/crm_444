@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
-import { rowsFromAOA, rowsFromRosterAOA, countRMByPhong, aggregate, scorePhong, scoreRM, buildSummary, monthLabel } from '../lib/aggregate';
-
-const FILE_DEFS = [
-  { label: 'Báo cáo trạng thái LEAD', expect: 'Lead code' },
-  { label: 'Báo cáo trạng thái OPP', expect: 'Opp code' },
-  { label: 'Tiếp cận tương tác LEAD', expect: 'Lead code' },
-  { label: 'Tiếp cận tương tác OPP', expect: 'Opp code' },
-  { label: 'Danh sách RM biên chế theo phòng (PeopleSoft)', expect: null, roster: true },
-];
+import { FILE_TYPES, buildPartialFromAOA, validateAOA, combinePartials, monthLabel } from '../lib/aggregate';
 
 function readFileAsAOA(file) {
   return new Promise((resolve, reject) => {
@@ -28,6 +20,12 @@ function readFileAsAOA(file) {
     reader.onerror = reject;
     reader.readAsArrayBuffer(file);
   });
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 function MiniTable({ rows, kind }) {
@@ -76,9 +74,11 @@ export default function Admin() {
 
   const [monthValue, setMonthValue] = useState(new Date().toISOString().slice(0, 7));
   const [files, setFiles] = useState([null, null, null, null, null]);
+  const [existingPartials, setExistingPartials] = useState({}); // { [fileType]: {data, uploadedAt} }
+  const [loadingExisting, setLoadingExisting] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [pendingData, setPendingData] = useState(null);
-  const [msg, setMsg] = useState(null); // {type, text}
+  const [pendingData, setPendingData] = useState(null); // { phong, rm, summary, changedPartials }
+  const [msg, setMsg] = useState(null);
   const [months, setMonths] = useState([]);
   const fileInputs = [useRef(), useRef(), useRef(), useRef(), useRef()];
 
@@ -92,6 +92,28 @@ export default function Admin() {
       })
       .catch(() => setChecking(false));
   }, []);
+
+  useEffect(() => {
+    if (!authed || !monthValue) return;
+    loadExistingPartials(monthValue);
+    setFiles([null, null, null, null, null]);
+    setPendingData(null);
+    setMsg(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthValue, authed]);
+
+  async function loadExistingPartials(key) {
+    setLoadingExisting(true);
+    try {
+      const r = await fetch(`/api/partials/${encodeURIComponent(key)}`);
+      const res = await r.json();
+      setExistingPartials(res.partials || {});
+    } catch (err) {
+      setExistingPartials({});
+    } finally {
+      setLoadingExisting(false);
+    }
+  }
 
   async function refreshMonths() {
     const r = await fetch('/api/months');
@@ -136,58 +158,56 @@ export default function Admin() {
       setMsg({ type: 'error', text: 'Vui lòng chọn tháng áp dụng.' });
       return;
     }
-    if (files.some((f) => !f)) {
-      setMsg({ type: 'error', text: 'Vui lòng tải đủ cả 5 file Excel.' });
+
+    const missing = [];
+    FILE_TYPES.forEach((def, i) => {
+      if (!files[i] && !existingPartials[def.type]) missing.push(def.label);
+    });
+    if (missing.length) {
+      setMsg({
+        type: 'error',
+        text: `Thiếu dữ liệu cho: ${missing.join(', ')}. Đây là các file chưa từng tải cho kỳ này — bắt buộc phải chọn file lần đầu.`,
+      });
       return;
     }
+
     setProcessing(true);
     try {
-      const aoas = await Promise.all(files.map(readFileAsAOA));
-
-      const parsed4 = aoas.slice(0, 4).map((a) => rowsFromAOA(a));
-      const roster = rowsFromRosterAOA(aoas[4]);
-
       const warnings = [];
-      parsed4.forEach((p, i) => {
-        if (!p.headers.includes(FILE_DEFS[i].expect)) {
-          warnings.push(`File #${i + 1} không tìm thấy cột "${FILE_DEFS[i].expect}" — kiểm tra lại đúng loại báo cáo.`);
+      const parts = {};
+      const changedPartials = {};
+
+      for (let i = 0; i < FILE_TYPES.length; i++) {
+        const def = FILE_TYPES[i];
+        if (files[i]) {
+          const aoa = await readFileAsAOA(files[i]);
+          const w = validateAOA(def.type, aoa);
+          if (w.length) warnings.push(`File "${def.label}": ${w.join(' ')}`);
+          const partial = buildPartialFromAOA(def.type, aoa);
+          parts[def.type] = partial;
+          changedPartials[def.type] = partial;
+        } else {
+          parts[def.type] = existingPartials[def.type].data;
         }
-      });
-      if (!roster.headers.includes('Tên phòng')) {
-        warnings.push('File #5 không tìm thấy cột "Tên phòng" — kiểm tra lại file danh sách biên chế.');
-      }
-      if (!roster.rmCol) {
-        warnings.push(
-          'File #5 không nhận diện được cột mã RM (thử các tên: RM quản lý, RM, Mã CB, Mã nhân viên, User RM...). Điểm Phòng sẽ không tính được cho đến khi bổ sung.'
-        );
       }
 
-      const [leadStatusRows, oppStatusRows, leadIntRows, oppIntRows] = parsed4.map((p) => p.rows);
-
-      const rmCountMap = countRMByPhong(roster.rows, roster.rmCol);
-      const phongRaw = aggregate(leadStatusRows, oppStatusRows, leadIntRows, oppIntRows, 'Tên phòng');
-      const rmRaw = aggregate(leadStatusRows, oppStatusRows, leadIntRows, oppIntRows, 'RM quản lý');
-
-      const phong = scorePhong(phongRaw, rmCountMap);
-      const rm = scoreRM(rmRaw);
-      const summary = buildSummary(leadStatusRows, oppStatusRows, leadIntRows, oppIntRows, rmCountMap);
-
-      const phongMissingHeadcount = phong.filter((p) => !p.soRM).length;
+      const combined = combinePartials(parts);
+      const phongMissingHeadcount = combined.phong.filter((p) => !p.soRM).length;
       if (phongMissingHeadcount > 0) {
         warnings.push(
           `${phongMissingHeadcount} phòng có phát sinh Lead/Opp nhưng không có trong danh sách biên chế RM — điểm Phòng của các đơn vị này hiển thị "—".`
         );
       }
 
-      setPendingData({ month: monthValue, phong, rm, summary });
+      setPendingData({ ...combined, changedPartials });
 
       if (warnings.length) setMsg({ type: 'error', text: warnings.join(' ') });
+      else if (Object.keys(changedPartials).length === 0)
+        setMsg({ type: 'success', text: 'Không có file nào thay đổi so với dữ liệu đã lưu — vẫn có thể bấm Lưu để cập nhật lại điểm.' });
       else
         setMsg({
           type: 'success',
-          text: `Đã xử lý thành công ${leadStatusRows.length} Lead và ${oppStatusRows.length} Opp, ${Object.values(
-            rmCountMap
-          ).reduce((a, b) => a + b, 0)} RM biên chế. Kiểm tra bảng xem trước rồi bấm "Lưu vào bảng xếp hạng".`,
+          text: `Đã xử lý xong ${Object.keys(changedPartials).length}/5 file vừa chọn (các file còn lại dùng dữ liệu đã lưu trước đó). Kiểm tra bảng xem trước rồi bấm "Lưu vào bảng xếp hạng".`,
         });
     } catch (err) {
       console.error(err);
@@ -199,32 +219,50 @@ export default function Admin() {
 
   async function saveMonth() {
     if (!pendingData) return;
-    const key = pendingData.month;
-    const exists = months.find((m) => m.key === key);
-    if (exists && !confirm(`Kỳ ${monthLabel(key)} đã có dữ liệu. Bạn có muốn ghi đè không?`)) return;
+    const key = monthValue;
+    const isNewMonth = !months.find((m) => m.key === key);
+    if (!isNewMonth && !confirm(`Kỳ ${monthLabel(key)} đã có dữ liệu. Lưu sẽ cập nhật điểm mới nhất. Tiếp tục?`)) return;
 
-    const r = await fetch(`/api/data/${encodeURIComponent(key)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(pendingData),
-    });
-    if (r.ok) {
+    try {
+      // Lưu từng partial đã thay đổi trước (để lần sau còn tái sử dụng được).
+      for (const [fileType, partial] of Object.entries(pendingData.changedPartials)) {
+        const r = await fetch(`/api/partials/${encodeURIComponent(key)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileType, partial }),
+        });
+        if (!r.ok) throw new Error('Lưu partial thất bại: ' + fileType);
+      }
+
+      // Lưu kết quả cuối cùng (phong/rm/summary) để hiển thị công khai.
+      const r2 = await fetch(`/api/data/${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phong: pendingData.phong, rm: pendingData.rm, summary: pendingData.summary }),
+      });
+      if (!r2.ok) {
+        const res = await r2.json().catch(() => ({}));
+        throw new Error(res.error || 'Lưu thất bại.');
+      }
+
       setMsg({ type: 'success', text: `Đã lưu dữ liệu kỳ ${monthLabel(key)} vào bảng xếp hạng công khai.` });
       setPendingData(null);
       setFiles([null, null, null, null, null]);
       fileInputs.forEach((ref) => ref.current && (ref.current.value = ''));
+      await loadExistingPartials(key);
       refreshMonths();
-    } else {
-      const res = await r.json().catch(() => ({}));
-      setMsg({ type: 'error', text: res.error || 'Lưu thất bại.' });
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message || 'Lưu thất bại.' });
     }
   }
 
   async function removeMonth(key) {
-    if (!confirm(`Xóa dữ liệu kỳ ${monthLabel(key)}? Hành động này không thể hoàn tác.`)) return;
+    if (!confirm(`Xóa dữ liệu kỳ ${monthLabel(key)}? Hành động này không thể hoàn tác (bao gồm cả dữ liệu từng file đã lưu).`)) return;
     const r = await fetch(`/api/data/${encodeURIComponent(key)}`, { method: 'DELETE' });
-    if (r.ok) refreshMonths();
-    else alert('Xóa thất bại.');
+    if (r.ok) {
+      refreshMonths();
+      if (key === monthValue) loadExistingPartials(key);
+    } else alert('Xóa thất bại.');
   }
 
   if (checking) return null;
@@ -280,13 +318,11 @@ export default function Admin() {
 
             <div className="admin-grid">
               <div className="upload-panel">
-                <h3>Tải số liệu kỳ mới</h3>
+                <h3>Tải số liệu kỳ</h3>
                 <div className="hint">
-                  Chọn tháng áp dụng và tải đủ 5 file Excel: 4 file xuất từ hệ thống CRM1.0 và 1 file danh sách biên
-                  chế RM theo phòng (trích PeopleSoft). Điểm RM tính theo số tuyệt đối: 30% × Lead/Opp có tương tác +
-                  30% × Lead chuyển đổi sang Opp + 40% × Opp thành công. Điểm Phòng chia bình quân theo số RM biên chế
-                  của phòng để so sánh công bằng giữa các phòng có quy mô khác nhau, đúng công thức Mục 6.1 Công văn
-                  7087.
+                  Chọn tháng áp dụng, rồi tải từng file cần cập nhật. <strong>Không bắt buộc chọn đủ 5 file mỗi lần</strong> —
+                  nếu một file đã từng tải cho kỳ này, bấm "Xử lý số liệu" mà không chọn lại file đó, hệ thống sẽ tự
+                  dùng dữ liệu đã lưu trước. Chỉ khi tạo kỳ hoàn toàn mới mới cần đủ cả 5 file lần đầu.
                 </div>
 
                 <div>
@@ -300,30 +336,47 @@ export default function Admin() {
                 </div>
 
                 <div style={{ marginTop: 16 }}>
-                  {FILE_DEFS.map((def, i) => (
-                    <div className="file-row" key={i}>
-                      <div className="tag">{i + 1}</div>
-                      <div className="info">
-                        <div className="t">{def.label}</div>
-                        <div className="s">{files[i] ? files[i].name : 'Chưa chọn file'}</div>
+                  {FILE_TYPES.map((def, i) => {
+                    const existing = existingPartials[def.type];
+                    const hasNewFile = !!files[i];
+                    let statusText = '—';
+                    let statusOk = false;
+                    if (hasNewFile) {
+                      statusText = 'File mới';
+                      statusOk = true;
+                    } else if (existing) {
+                      statusText = `Đã có (${formatDateTime(existing.uploadedAt)})`;
+                      statusOk = true;
+                    } else if (loadingExisting) {
+                      statusText = 'Đang kiểm tra...';
+                    } else {
+                      statusText = 'Chưa có, bắt buộc chọn';
+                    }
+                    return (
+                      <div className="file-row" key={def.type}>
+                        <div className="tag">{i + 1}</div>
+                        <div className="info">
+                          <div className="t">{def.label}</div>
+                          <div className="s">{hasNewFile ? files[i].name : existing ? 'Dùng lại dữ liệu đã lưu, hoặc chọn file mới để thay thế' : 'Chưa chọn file'}</div>
+                        </div>
+                        <label className="pick" htmlFor={`f${i}`}>
+                          {existing ? 'Thay file' : 'Chọn file'}
+                        </label>
+                        <input
+                          ref={fileInputs[i]}
+                          id={`f${i}`}
+                          type="file"
+                          accept=".xlsx,.xls"
+                          onChange={(e) => onPick(i, e.target.files[0])}
+                        />
+                        <div className={`status ${statusOk ? 'ok' : ''}`}>{statusText}</div>
                       </div>
-                      <label className="pick" htmlFor={`f${i}`}>
-                        Chọn file
-                      </label>
-                      <input
-                        ref={fileInputs[i]}
-                        id={`f${i}`}
-                        type="file"
-                        accept=".xlsx,.xls"
-                        onChange={(e) => onPick(i, e.target.files[0])}
-                      />
-                      <div className={`status ${files[i] ? 'ok' : ''}`}>{files[i] ? 'Sẵn sàng' : '—'}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="actions-row">
-                  <button className="btn" onClick={processFiles} disabled={processing}>
+                  <button className="btn" onClick={processFiles} disabled={processing || loadingExisting}>
                     {processing ? 'Đang xử lý...' : 'Xử lý số liệu'}
                   </button>
                   <button className="btn secondary" onClick={saveMonth} disabled={!pendingData}>
@@ -361,13 +414,18 @@ export default function Admin() {
                           <div className="m">{m.label}</div>
                           <div className="r">Kỳ: {m.key}</div>
                         </div>
-                        <button
-                          className="btn danger"
-                          style={{ padding: '6px 10px', fontSize: 11.5 }}
-                          onClick={() => removeMonth(m.key)}
-                        >
-                          Xóa
-                        </button>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn secondary" style={{ padding: '6px 10px', fontSize: 11.5 }} onClick={() => setMonthValue(m.key)}>
+                            Sửa
+                          </button>
+                          <button
+                            className="btn danger"
+                            style={{ padding: '6px 10px', fontSize: 11.5 }}
+                            onClick={() => removeMonth(m.key)}
+                          >
+                            Xóa
+                          </button>
+                        </div>
                       </div>
                     ))
                 )}
