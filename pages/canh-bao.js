@@ -68,10 +68,9 @@ export default function CanhBao() {
         <div className="topbar-inner">
           <div>
             <div className="eyebrow">VietinBank · Chi nhánh Bắc Nghệ An</div>
-            <div className="title">Cảnh báo cán bộ điểm thi đua thấp</div>
+            <div className="title">Cảnh báo cán bộ chưa quan tâm triển khai CRM 1.0</div>
             <div className="subtitle">
-              Danh sách RM có điểm thi đua thấp hơn 30% điểm bình quân/RM toàn chi nhánh trong kỳ — dùng để nhắc nhở, hỗ
-              trợ kịp thời.
+              Danh sách RM có điểm thi đua thấp hơn 30% điểm bình quân/RM toàn chi nhánh trong kỳ — trừ 2 điểm KPI + không xét thi đua.
             </div>
           </div>
           <div className="nav">
@@ -145,7 +144,7 @@ export default function CanhBao() {
               </div>
               <div className="stat-card">
                 <div className="num">{(benchmark.soRM || 0).toLocaleString('vi-VN')}</div>
-                <div className="lbl">Tổng số RM biên chế</div>
+                <div className="lbl">Tổng số RM</div>
               </div>
             </div>
 
@@ -196,7 +195,7 @@ export default function CanhBao() {
                       <th>Cán bộ (RM)</th>
                       <th>Phòng</th>
                       <th>Lead giao</th>
-                      <th>Số lượng Lead/Opp có tương tác</th>
+                      <th>Lead/Opp có tương tác</th>
                       <th>Lead → Opp</th>
                       <th>Opp thành công</th>
                       <th>Điểm thi đua</th>
@@ -230,7 +229,7 @@ export default function CanhBao() {
         )}
       </div>
 
-      <footer>Nội bộ VietinBank Chi nhánh Bắc Nghệ An · Dữ liệu phục vụ chương trình thi đua CRM1.0 Transformation 2026</footer>
+      <footer>VietinBank Chi nhánh Bắc Nghệ An · Dữ liệu phục vụ chương trình thi đua CRM1.0 Transformation 2026</footer>
     </>
   );
 }
