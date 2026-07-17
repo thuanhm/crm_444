@@ -39,8 +39,7 @@ function MiniTable({ rows, kind }) {
             <th>{nameHeader}</th>
             {kind === 'phong' && <th>Số RM</th>}
             <th>Lead giao</th>
-            <th>Tương tác</th>
-            <th>Tỷ lệ</th>
+            <th>Số lượng tương tác</th>
             <th>Lead→Opp</th>
             <th>Opp TC</th>
             <th>Điểm</th>
@@ -50,11 +49,10 @@ function MiniTable({ rows, kind }) {
           {rows.map((r, i) => (
             <tr key={r.key}>
               <td className="rank">{i + 1}</td>
-              <td className="name-cell">{r.key}</td>
+              <td className="name-cell">{kind === 'phong' ? r.label || r.key : r.key}</td>
               {kind === 'phong' && <td className="mono">{r.soRM || '—'}</td>}
               <td className="mono">{r.leadGiao}</td>
               <td className="mono">{r.leadTuongTac + r.oppTuongTac}</td>
-              <td className="mono">{r.tyLe}%</td>
               <td className="mono">{r.leadChuyenDoi}</td>
               <td className="mono">{r.oppThanhCong}</td>
               <td className="diem mono">{r.diem === null || r.diem === undefined ? '—' : r.diem}</td>
@@ -231,12 +229,7 @@ export default function Admin() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileType, partial }),
         });
-        if (!r.ok) {
-          const errBody = await r.json().catch(() => ({}));
-          throw new Error(
-            `Lưu partial thất bại (${fileType}): HTTP ${r.status}. ${errBody.error || 'Lỗi không xác định.'}`
-          );
-        }
+        if (!r.ok) throw new Error('Lưu partial thất bại: ' + fileType);
       }
 
       // Lưu kết quả cuối cùng (phong/rm/summary) để hiển thị công khai.

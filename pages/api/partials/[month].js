@@ -1,15 +1,6 @@
 import { getPartials, setPartial } from '../../../lib/db';
 import { requireAdmin } from '../../../lib/auth';
 
-// Tăng giới hạn body lên 10 MB vì partial của file Excel lớn có thể vượt 1 MB mặc định
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
-
 const VALID_TYPES = ['lead_status', 'opp_status', 'lead_int', 'opp_int', 'roster'];
 
 export default async function handler(req, res) {
@@ -41,8 +32,8 @@ export default async function handler(req, res) {
       await setPartial(month, fileType, partial);
       return res.status(200).json({ ok: true });
     } catch (err) {
-      console.error('[partials POST] Lỗi khi lưu partial:', err?.message || err);
-      return res.status(500).json({ error: 'Không lưu được dữ liệu. Kiểm tra kết nối Postgres. Chi tiết: ' + (err?.message || String(err)) });
+      console.error(err);
+      return res.status(500).json({ error: 'Không lưu được dữ liệu. Kiểm tra kết nối Postgres.' });
     }
   }
 

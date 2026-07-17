@@ -89,7 +89,9 @@ build và deploy phiên bản mới, có sẵn URL dạng `https://<ten-project>
   4. Tiếp cận tương tác OPP
   5. **Danh sách RM biên chế theo phòng** (trích từ PeopleSoft) — cần có cột `Tên phòng` và một
      cột định danh RM (chấp nhận các tên: `RM quản lý`, `RM`, `Mã CB`, `Mã cán bộ`, `Mã nhân viên`,
-     `User RM`, `Username`, `User name` — hệ thống tự nhận diện cột đầu tiên khớp).
+     `User RM`, `Username`, `User name`, `Email/AD`, `Email`, `AD`, `Mã đăng nhập` — hệ thống tự
+     nhận diện cột đầu tiên khớp). Đối chiếu với 4 file CRM dùng **mã phòng**, không dùng tên
+     phòng — xem chi tiết ở mục bên dưới.
 
   **Sửa kỳ đã có (KHÔNG cần tải lại đủ 5 file):** chọn tháng đã có dữ liệu (hoặc bấm "Sửa" ở danh
   sách bên phải), mỗi ô file sẽ hiện "Đã có (ngày giờ tải)" nếu từng tải trước đó. Chỉ cần chọn
@@ -97,7 +99,34 @@ build và deploy phiên bản mới, có sẵn URL dạng `https://<ten-project>
   số liệu" để xem trước, "Lưu vào bảng xếp hạng" để công bố. Có thể xóa hẳn một kỳ nếu cần làm
   lại từ đầu.
 
-## Vì sao có thể sửa từng file riêng lẻ mà vẫn an toàn dữ liệu khách hàng
+## Đối chiếu Phòng bằng MÃ PHÒNG (không dùng tên phòng)
+
+4 file CRM và file danh sách biên chế được đối chiếu theo **mã phòng**, không theo tên phòng —
+tránh sai lệch do viết hoa/thường, thừa/thiếu dấu cách, hay cách viết tắt khác nhau giữa các
+nguồn dữ liệu. Tên phòng chỉ dùng để hiển thị trên giao diện.
+
+Hai định dạng mã phòng được tự động quy đổi về cùng một chuẩn:
+- **4 file CRM** dùng mã 5 ký tự dạng `444xx` (cột "Mã phòng").
+- **File biên chế PeopleSoft** thường dùng mã 9 ký tự dạng `0444xx000` (cột có tên chứa "Mã
+  phòng", ví dụ "Mã phòng ban") — hệ thống tự cắt số 0 đầu và 3 số 0 cuối để quy về `444xx`.
+
+Cột nhận diện RM trong file biên chế cũng được mở rộng, chấp nhận thêm `Email/AD`, `Email`, `AD`,
+`Mã đăng nhập` bên cạnh các tên cột đã hỗ trợ trước đó.
+
+**Chỉ hiển thị Phòng/RM có trong file biên chế:** bảng xếp hạng (cả trang công khai và trang xem
+trước ở Quản trị) chỉ liệt kê những Phòng và RM có tên trong file biên chế PeopleSoft của kỳ đó.
+Phòng hoặc cán bộ phát sinh Lead/Opp nhưng không có trong file biên chế (ví dụ Phòng Kế hoạch
+Tổng hợp, Phòng Hỗ trợ tín dụng — không thuộc diện RM) sẽ không xuất hiện trong bảng, thay vì
+hiện dòng với điểm "—".
+
+## Tiêu chí công văn dùng SỐ LƯỢNG, không dùng tỷ lệ %
+
+Cả công thức tính điểm và giao diện hiển thị đều dùng **số lượng tuyệt đối** Lead/Opp có tương
+tác — đúng nguyên văn Mục 6.1 và 6.2 Công văn 7087 ("Số lượng Lead/Opp có thông tin tương tác,
+tiếp cận"). Không có chỉ số tỷ lệ % nào được dùng trong công thức hay hiển thị trên bảng xếp
+hạng, để tránh gây hiểu nhầm đây là một tiêu chí xét thưởng.
+
+
 
 Mỗi file trong 5 file được xử lý **ngay trên trình duyệt** của admin thành một "partial" — số
 liệu đã tổng hợp theo Phòng/RM (số lượng Lead, Opp, tỷ lệ...) — **trước khi** gửi lên server.

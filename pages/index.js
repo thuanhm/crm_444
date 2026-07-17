@@ -8,12 +8,6 @@ function rankBadge(i) {
   return i + 1;
 }
 
-function tyleBarClass(v) {
-  if (v >= 20) return 'high';
-  if (v >= 8) return 'mid';
-  return 'low';
-}
-
 function DataTable({ rows, kind }) {
   if (!rows.length) {
     return (
@@ -36,8 +30,7 @@ function DataTable({ rows, kind }) {
             {kind === 'rm' && <th>Phòng</th>}
             {kind === 'phong' && <th>Số RM</th>}
             <th>Lead giao</th>
-            <th>Lead/Opp tương tác</th>
-            <th>Tỷ lệ tiếp cận</th>
+            <th>Số lượng Lead/Opp có tương tác</th>
             <th>Lead → Opp</th>
             <th>Opp thành công</th>
             <th>Điểm thi đua</th>
@@ -47,19 +40,11 @@ function DataTable({ rows, kind }) {
           {rows.map((r, i) => (
             <tr key={r.key}>
               <td className="rank">{r.diem === null ? '—' : rankBadge(i)}</td>
-              <td className="name-cell">{r.key}</td>
-              {kind === 'rm' && <td>{r.phong || '—'}</td>}
+              <td className="name-cell">{kind === 'phong' ? r.label || r.key : r.key}</td>
+              {kind === 'rm' && <td>{r.phongLabel || r.phong || '—'}</td>}
               {kind === 'phong' && <td className="mono">{r.soRM || '—'}</td>}
               <td className="mono">{r.leadGiao.toLocaleString('vi-VN')}</td>
               <td className="mono">{(r.leadTuongTac + r.oppTuongTac).toLocaleString('vi-VN')}</td>
-              <td>
-                <div className="tyle-bar-wrap">
-                  <span className="mono">{r.tyLe}%</span>
-                  <div className={`tyle-bar ${tyleBarClass(r.tyLe)}`}>
-                    <div style={{ width: `${Math.min(100, r.tyLe)}%` }} />
-                  </div>
-                </div>
-              </td>
               <td className="mono">{r.leadChuyenDoi}</td>
               <td className="mono">{r.oppThanhCong}</td>
               <td className="diem mono">{r.diem === null || r.diem === undefined ? '—' : r.diem}</td>
@@ -102,7 +87,15 @@ export default function Home() {
     if (!data) return { phong: [], rm: [] };
     const q = query.trim().toLowerCase();
     const filt = (arr) =>
-      q ? arr.filter((r) => r.key.toLowerCase().includes(q) || (r.phong || '').toLowerCase().includes(q)) : arr;
+      q
+        ? arr.filter(
+            (r) =>
+              r.key.toLowerCase().includes(q) ||
+              (r.label || '').toLowerCase().includes(q) ||
+              (r.phong || '').toLowerCase().includes(q) ||
+              (r.phongLabel || '').toLowerCase().includes(q)
+          )
+        : arr;
     return { phong: filt(data.phong || []), rm: filt(data.rm || []) };
   }, [data, query]);
 
@@ -117,7 +110,7 @@ export default function Home() {
             <div className="eyebrow">VietinBank · Chi nhánh Bắc Nghệ An</div>
             <div className="title">CRM1.0 Transformation 2026 — Đổi hành vi, tăng hiệu quả</div>
             <div className="subtitle">
-              Bảng điểm thi đua  — cập nhật theo từng kỳ tháng, tính theo
+              Bảng điểm thi đua công khai theo Công văn 7087/TGĐ-NHCT-KHDN5 — cập nhật theo từng kỳ tháng, tính theo
               Phòng/PGD và cán bộ RM.
             </div>
           </div>
@@ -170,7 +163,7 @@ export default function Home() {
               <div className="big">📊</div>
               Chưa có dữ liệu kỳ nào được tải lên.
               <br />
-              Vui lòng liên hệ Phòng Tổ chức Tổng hợp để cập nhật.
+              Vui lòng liên hệ Phòng Kế hoạch Tổng hợp để cập nhật.
             </div>
           </div>
         ) : (
@@ -198,7 +191,7 @@ export default function Home() {
               </div>
               <div className="stat-card">
                 <div className="num">{(s.tongRM || 0).toLocaleString('vi-VN')}</div>
-                <div className="lbl">Tổng số RM</div>
+                <div className="lbl">Tổng số RM biên chế</div>
               </div>
             </div>
 
@@ -217,7 +210,7 @@ export default function Home() {
         )}
       </div>
 
-      <footer>VietinBank Chi nhánh Bắc Nghệ An · Dữ liệu phục vụ chương trình thi đua CRM1.0 Transformation 2026</footer>
+      <footer>Nội bộ VietinBank Chi nhánh Bắc Nghệ An · Dữ liệu phục vụ chương trình thi đua CRM1.0 Transformation 2026</footer>
     </>
   );
 }
