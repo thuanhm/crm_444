@@ -231,7 +231,12 @@ export default function Admin() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileType, partial }),
         });
-        if (!r.ok) throw new Error('Lưu partial thất bại: ' + fileType);
+        if (!r.ok) {
+          const errBody = await r.json().catch(() => ({}));
+          throw new Error(
+            `Lưu partial thất bại (${fileType}): HTTP ${r.status}. ${errBody.error || 'Lỗi không xác định.'}`
+          );
+        }
       }
 
       // Lưu kết quả cuối cùng (phong/rm/summary) để hiển thị công khai.
