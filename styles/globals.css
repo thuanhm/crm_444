@@ -28,7 +28,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Be Vietnam
 }
 .topbar::before{
   content:''; position:absolute; left:0; right:0; bottom:0; height:5px;
-  background: linear-gradient(90deg, rgb(0, 89, 147), rgb(215, 18, 73));
+  background:linear-gradient(90deg,var(--red),#ff7a5c,var(--gold),var(--navy-light));
 }
 .topbar-inner{position:relative; z-index:1; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:14px;}
 .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; font-weight:600;}
@@ -74,14 +74,12 @@ td.name-cell{white-space:normal; font-weight:600;}
 .rank{font-weight:800; font-family:'JetBrains Mono',monospace; text-align:center; width:34px;}
 .medal{font-size:16px;}
 .diem{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--navy-dark);}
-.tyle-bar-wrap{display:flex; align-items:center; gap:8px;}
-.tyle-bar{width:70px; height:6px; background:#E4E9F1; border-radius:4px; overflow:hidden;}
-.tyle-bar > div{height:100%; background:var(--navy-light); border-radius:4px;}
-.tyle-bar.low > div{background:var(--bad);}
-.tyle-bar.mid > div{background:var(--warn);}
-.tyle-bar.high > div{background:var(--good);}
 .empty-state{padding:50px 24px; text-align:center; color:var(--muted);}
 .empty-state .big{font-size:34px; margin-bottom:8px;}
+.badge{display:inline-block; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px;}
+.badge.bad{background:#FCE7E7; color:var(--bad);}
+.badge.warn{background:#FDF1E1; color:var(--warn);}
+.badge.mid{background:#FFF7DA; color:#9A7B12;}
 
 .login-box{max-width:380px; margin:60px auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:30px; text-align:center; box-shadow:0 4px 18px rgba(18,34,56,.08);}
 .login-box h3{margin:6px 0 4px; color:var(--navy-dark);}
@@ -111,6 +109,7 @@ td.name-cell{white-space:normal; font-weight:600;}
 .file-row .info .s{font-size:11.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis;}
 .file-row .status{font-size:11px; font-weight:700; padding:3px 8px; border-radius:999px; background:#F0F3F7; color:var(--muted); flex-shrink:0;}
 .file-row .status.ok{background:#E7F6EE; color:var(--good);}
+.file-row .status.warn{background:#FDF1E1; color:var(--warn);}
 .file-row input[type=file]{display:none;}
 .file-row label.pick{font-size:12px; font-weight:700; color:var(--navy); cursor:pointer; padding:6px 10px; border:1px solid var(--line); border-radius:8px; flex-shrink:0;}
 .file-row label.pick:hover{background:#F3F6FA;}
@@ -171,7 +170,6 @@ footer{text-align:center; padding:26px; font-size:12px; color:var(--muted);}
   table{font-size:12.5px;}
   thead th{padding:9px 8px; font-size:10.5px;}
   tbody td{padding:8px 8px;}
-  .tyle-bar{width:44px;}
 
   /* Khối upload file: xếp thành 2 dòng thay vì ép 1 dòng ngang */
   .file-row{flex-wrap:wrap; row-gap:8px;}

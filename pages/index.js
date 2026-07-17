@@ -118,6 +118,7 @@ export default function Home() {
             <Link href="/" className="active">
               Bảng xếp hạng
             </Link>
+            <Link href="/canh-bao">Cảnh báo</Link>
             <Link href="/admin">Quản trị</Link>
           </div>
         </div>

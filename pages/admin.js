@@ -280,6 +280,7 @@ export default function Admin() {
           </div>
           <div className="nav">
             <Link href="/">Bảng xếp hạng</Link>
+            <Link href="/canh-bao">Cảnh báo</Link>
             <Link href="/admin" className="active">
               Quản trị
             </Link>

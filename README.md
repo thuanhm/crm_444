@@ -111,6 +111,27 @@ dạng cũ — ô tương ứng hiện "Dữ liệu cũ — cần tải lại" (
 không dùng được nữa). Sau khi lưu, kỳ đó sẽ ở định dạng mới và từ lần sau có thể sửa từng file
 riêng lẻ bình thường. Các kỳ tạo mới từ bây giờ trở đi không bị ảnh hưởng.
 
+## Tab Cảnh báo — cán bộ có điểm thấp hơn 30% bình quân chi nhánh
+
+Trang `/canh-bao` (công khai, cùng cấp với Bảng xếp hạng) hiển thị danh sách RM có điểm thi đua
+thấp hơn 30% **điểm bình quân/RM toàn chi nhánh** trong kỳ đang chọn.
+
+Điểm bình quân/RM toàn chi nhánh dùng đúng công thức Mục 6.1 công văn nhưng gộp số liệu toàn chi
+nhánh (không tách theo phòng) rồi chia cho tổng số RM biên chế toàn chi nhánh — cùng đơn vị
+"điểm/1 RM" nên so sánh trực tiếp được với điểm tuyệt đối của từng RM (Mục 6.2):
+
+```
+Điểm bình quân/RM = 30% × (Tổng Lead/Opp có tương tác toàn CN ÷ Tổng RM)
+                   + 30% × (Tổng Lead chuyển đổi sang Opp toàn CN ÷ Tổng RM)
+                   + 40% × (Tổng Opp thành công toàn CN ÷ Tổng RM)
+
+Ngưỡng cảnh báo = 30% × Điểm bình quân/RM
+```
+
+Trang hiển thị: điểm bình quân, ngưỡng cảnh báo, số/tỷ lệ RM bị cảnh báo, số RM cảnh báo theo
+từng phòng, và bảng chi tiết từng RM (sắp xếp điểm thấp nhất lên đầu) kèm mức độ nghiêm trọng
+(badge màu theo % so với bình quân: ≤10% đỏ, ≤20% cam, còn lại vàng).
+
 ## Đối chiếu Phòng bằng MÃ PHÒNG (không dùng tên phòng)
 
 4 file CRM và file danh sách biên chế được đối chiếu theo **mã phòng**, không theo tên phòng —
