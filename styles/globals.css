@@ -27,8 +27,8 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Be Vietnam
   background:radial-gradient(circle,rgba(238,28,37,.35),transparent 70%);
 }
 .topbar::before{
-  content:''; position:absolute; left:0; right:0; bottom:0; height:5px;
-  background:linear-gradient(90deg,var(--red),#ff7a5c,var(--gold),var(--navy-light));
+  content:''; position:absolute; left:0; right:0; bottom:0; height:8px;
+    background: linear-gradient(90deg, rgb(0, 89, 147), rgb(215, 18, 73));
 }
 .topbar-inner{position:relative; z-index:1; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:14px;}
 .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.8; font-weight:600;}
