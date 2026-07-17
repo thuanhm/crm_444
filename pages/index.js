@@ -30,7 +30,7 @@ function DataTable({ rows, kind }) {
             {kind === 'rm' && <th>Phòng</th>}
             {kind === 'phong' && <th>Số RM</th>}
             <th>Lead giao</th>
-            <th>Lead/Opp có tương tác</th>
+            <th>Số lượng Lead/Opp có tương tác</th>
             <th>Lead → Opp</th>
             <th>Opp thành công</th>
             <th>Điểm thi đua</th>
@@ -110,7 +110,7 @@ export default function Home() {
             <div className="eyebrow">VietinBank · Chi nhánh Bắc Nghệ An</div>
             <div className="title">CRM1.0 Transformation 2026 — Đổi hành vi, tăng hiệu quả</div>
             <div className="subtitle">
-              Bảng điểm thi đua triển khai CRM 1.0 — cập nhật theo từng kỳ tháng, tính theo
+              Bảng điểm thi đua công khai theo Công văn 7087/TGĐ-NHCT-KHDN5 — cập nhật theo từng kỳ tháng, tính theo
               Phòng/PGD và cán bộ RM.
             </div>
           </div>
@@ -192,7 +192,7 @@ export default function Home() {
               </div>
               <div className="stat-card">
                 <div className="num">{(s.tongRM || 0).toLocaleString('vi-VN')}</div>
-                <div className="lbl">Tổng số RM</div>
+                <div className="lbl">Tổng số RM biên chế</div>
               </div>
             </div>
 
@@ -211,7 +211,7 @@ export default function Home() {
         )}
       </div>
 
-      <footer>VietinBank Chi nhánh Bắc Nghệ An · Dữ liệu phục vụ chương trình thi đua CRM1.0 Transformation 2026</footer>
+      <footer>Nội bộ VietinBank Chi nhánh Bắc Nghệ An · Dữ liệu phục vụ chương trình thi đua CRM1.0 Transformation 2026</footer>
     </>
   );
 }

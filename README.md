@@ -99,16 +99,17 @@ build và deploy phiên bản mới, có sẵn URL dạng `https://<ten-project>
   số liệu" để xem trước, "Lưu vào bảng xếp hạng" để công bố. Có thể xóa hẳn một kỳ nếu cần làm
   lại từ đầu.
 
-## Di chuyển (migrate) dữ liệu các kỳ đã tải trước khi có bản cập nhật đối chiếu theo mã phòng
+## Di chuyển (migrate) dữ liệu khi hệ thống đổi cách tính điểm
 
-Các kỳ đã tải **trước khi** hệ thống đổi sang đối chiếu theo mã phòng (thay vì tên phòng) đang
-lưu dữ liệu ở định dạng cũ, không tương thích với cách tính mới. Hệ thống tự phát hiện việc này
-(qua `schemaVersion` gắn trên mỗi file đã xử lý) và sẽ **không** cho dùng lại các file ở định
-dạng cũ — ô tương ứng hiện "Dữ liệu cũ — cần tải lại" (màu cam) thay vì "Đã có" (màu xanh).
+Mỗi khi logic tính điểm cốt lõi thay đổi (ví dụ: đổi cách đối chiếu phòng, đổi phạm vi RM được
+tính...), các kỳ đã tải **trước đó** vẫn đang lưu dữ liệu theo cách tính cũ, không tương thích
+với kết quả mới. Hệ thống tự phát hiện việc này qua `schemaVersion` gắn trên mỗi file đã xử lý
+(xem `PARTIAL_SCHEMA_VERSION` trong `lib/aggregate.js`) và sẽ **không** cho dùng lại file ở phiên
+bản cũ — ô tương ứng hiện "Dữ liệu cũ — cần tải lại" (màu cam) thay vì "Đã có" (màu xanh).
 
 **Cách xử lý:** với mỗi kỳ đã tải trước đó, vào Quản trị, chọn lại đúng tháng đó, rồi tải lại
 **đủ cả 5 file gốc** của kỳ đó (không thể chỉ tải 1 file rồi dùng lại 4 file cũ, vì 4 file cũ
-không dùng được nữa). Sau khi lưu, kỳ đó sẽ ở định dạng mới và từ lần sau có thể sửa từng file
+không dùng được nữa). Sau khi lưu, kỳ đó sẽ ở phiên bản mới và từ lần sau có thể sửa từng file
 riêng lẻ bình thường. Các kỳ tạo mới từ bây giờ trở đi không bị ảnh hưởng.
 
 ## Tab Cảnh báo — cán bộ có điểm thấp hơn 30% bình quân chi nhánh
@@ -146,11 +147,11 @@ Hai định dạng mã phòng được tự động quy đổi về cùng một 
 Cột nhận diện RM trong file biên chế cũng được mở rộng, chấp nhận thêm `Email/AD`, `Email`, `AD`,
 `Mã đăng nhập` bên cạnh các tên cột đã hỗ trợ trước đó.
 
-**Chỉ hiển thị Phòng/RM có trong file biên chế:** bảng xếp hạng (cả trang công khai và trang xem
-trước ở Quản trị) chỉ liệt kê những Phòng và RM có tên trong file biên chế PeopleSoft của kỳ đó.
-Phòng hoặc cán bộ phát sinh Lead/Opp nhưng không có trong file biên chế (ví dụ Phòng Kế hoạch
-Tổng hợp, Phòng Hỗ trợ tín dụng — không thuộc diện RM) sẽ không xuất hiện trong bảng, thay vì
-hiện dòng với điểm "—".
+**Chỉ tính trên RM có trong file biên chế — nhất quán ở CẢ 3 CẤP:** vì mục tiêu chương trình
+thi đua là tính trên RM biên chế, hệ thống lọc bỏ hoàn toàn hoạt động của các RM không có tên
+trong file biên chế **trước khi** cộng dồn — áp dụng cho cả điểm RM, điểm Phòng, và số liệu Chi
+nhánh (kể cả mốc điểm bình quân ở tab Cảnh báo). Không phải chỉ ẩn RM lạ khỏi bảng xếp hạng cá
+nhân mà vẫn cộng ngầm vào điểm Phòng — đóng góp của RM ngoài biên chế bị loại khỏi mọi con số.
 
 ## Tiêu chí công văn dùng SỐ LƯỢNG, không dùng tỷ lệ %
 
