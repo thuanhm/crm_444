@@ -1,4 +1,4 @@
-import { getMonths } from '../../lib/kv';
+import { getMonths } from '../../lib/db';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -10,6 +10,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ months });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Không đọc được danh sách kỳ. Kiểm tra kết nối KV database.' });
+    return res.status(500).json({ error: 'Không đọc được danh sách kỳ. Kiểm tra kết nối Postgres (DATABASE_URL) và bảng thidua_data.' });
   }
 }

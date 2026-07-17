@@ -6,7 +6,7 @@ kèm trang quản trị để Trưởng phòng Kế hoạch Tổng hợp tải s
 ## Công nghệ
 
 - **Next.js** (Pages Router) — frontend + API routes
-- **Vercel KV** (Redis) — lưu điểm theo từng tháng, dùng chung cho mọi người xem
+- **Neon Postgres** (qua Vercel Marketplace) — lưu điểm theo từng tháng, dùng chung cho mọi người xem
 - **xlsx (SheetJS)** — đọc file Excel ngay trên trình duyệt, không upload file thô lên server
 - Đăng nhập admin bằng mật khẩu (biến môi trường) + cookie phiên ký HMAC, không dùng thư viện ngoài
 
@@ -19,10 +19,11 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-Mở http://localhost:3000. Lưu ý: khi chạy local mà **chưa** cấu hình `KV_REST_API_URL` /
-`KV_REST_API_TOKEN`, các API đọc/ghi dữ liệu sẽ báo lỗi kết nối KV — đây là điều bình thường,
-vì Vercel KV chỉ hoạt động khi có store thật. Cách nhanh nhất để có dữ liệu test: tạo KV store
-trên Vercel trước (xem bên dưới), copy 2 biến vào `.env.local`, rồi chạy lại `npm run dev`.
+Mở http://localhost:3000. Lưu ý: khi chạy local mà **chưa** cấu hình `DATABASE_URL`, các API
+đọc/ghi dữ liệu sẽ báo lỗi kết nối Postgres — đây là điều bình thường, vì cần có database Neon
+thật. Cách nhanh nhất để có dữ liệu test: tạo database Neon trước (xem bên dưới), chạy
+`db/schema.sql` trong Neon SQL Editor, copy connection string vào `.env.local`, rồi chạy lại
+`npm run dev`.
 
 ## Triển khai lên GitHub + Vercel
 
@@ -43,14 +44,22 @@ git push -u origin main
 1. Đăng nhập [vercel.com](https://vercel.com) bằng tài khoản GitHub.
 2. **Add New → Project**, chọn repo vừa đẩy lên.
 3. Vercel tự nhận diện Next.js, để nguyên cấu hình mặc định, bấm **Deploy** lần đầu
-   (sẽ báo lỗi thiếu biến môi trường/KV — không sao, xử lý ở bước 3–4 rồi deploy lại).
+   (sẽ báo lỗi thiếu biến môi trường/DATABASE_URL — không sao, xử lý ở bước 3–4 rồi deploy lại).
 
-### 3) Gắn Vercel KV Database
+### 3) Gắn Neon Postgres Database
 
-1. Trong project vừa tạo → tab **Storage** → **Create Database** → chọn **KV**.
-2. Đặt tên bất kỳ (vd. `thidua-crm-kv`), chọn khu vực gần Việt Nam nhất (Singapore).
-3. Sau khi tạo xong, bấm **Connect Project** và chọn đúng project — Vercel sẽ tự thêm 2 biến
-   `KV_REST_API_URL` và `KV_REST_API_TOKEN` vào project (không cần tự nhập).
+1. Trong project trên Vercel → tab **Storage** → **Browse Storage** (hoặc **Create Database**).
+2. Trong mục **Marketplace Database Providers**, chọn **Neon** (dòng "Serverless Postgres").
+3. Nếu đã có tài khoản Neon, Vercel sẽ cho đăng nhập/liên kết tài khoản đó; nếu chưa, hệ thống
+   tự tạo giúp.
+4. Chọn **project Neon có sẵn** (nếu đã có) hoặc tạo project/database mới, chọn khu vực gần Việt
+   Nam nhất (Singapore — `ap-southeast-1`), bấm **Create/Connect**.
+5. Ở bước **Connect Project**, chọn đúng project Vercel (`crm_444` hoặc tên repo anh đã đặt) —
+   Vercel tự thêm biến môi trường `DATABASE_URL` vào project, không cần tự nhập.
+6. **Tạo bảng dữ liệu (chỉ làm một lần):** vào Neon Dashboard → chọn database vừa tạo →
+   **SQL Editor**, dán toàn bộ nội dung file `db/schema.sql` trong project này vào, bấm **Run**.
+   Việc này tạo bảng `thidua_data` để lưu điểm — nếu bỏ qua bước này, website sẽ báo lỗi "Không
+   đọc được dữ liệu" khi mở trang.
 
 ### 4) Thêm biến môi trường còn lại
 
@@ -112,7 +121,7 @@ bình quân các kỳ có dữ liệu biên chế (giả định biên chế ít
 - Đăng nhập admin dùng một mật khẩu dùng chung (không phải tài khoản cá nhân từng người) — phù
   hợp với quy mô một chi nhánh, không phù hợp nếu cần phân quyền nhiều admin có nhật ký riêng.
 - File Excel được đọc và tính điểm ngay trên trình duyệt của admin (không gửi file thô lên
-  server), chỉ kết quả đã tính (JSON) được lưu vào Vercel KV.
+  server), chỉ kết quả đã tính (JSON, lưu vào cột JSONB) được ghi vào Neon Postgres.
 - Điểm Phòng phụ thuộc vào chất lượng file danh sách biên chế RM (file #5) — nếu file này thiếu
   hoặc sai tên phòng so với 4 file CRM còn lại, điểm Phòng tương ứng sẽ hiển thị "—" thay vì một
   số liệu không chính xác.
