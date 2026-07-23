@@ -10,21 +10,6 @@ kèm trang quản trị để Trưởng phòng Kế hoạch Tổng hợp tải s
 - **xlsx (SheetJS)** — đọc file Excel ngay trên trình duyệt, không upload file thô lên server
 - Đăng nhập admin bằng mật khẩu (biến môi trường) + cookie phiên ký HMAC, không dùng thư viện ngoài
 
-## Chạy thử ở máy local
-
-```bash
-npm install
-cp .env.local.example .env.local
-# Sửa .env.local: đặt ADMIN_PASSWORD và SESSION_SECRET
-npm run dev
-```
-
-Mở http://localhost:3000. Lưu ý: khi chạy local mà **chưa** cấu hình `DATABASE_URL`, các API
-đọc/ghi dữ liệu sẽ báo lỗi kết nối Postgres — đây là điều bình thường, vì cần có database Neon
-thật. Cách nhanh nhất để có dữ liệu test: tạo database Neon trước (xem bên dưới), chạy
-`db/schema.sql` trong Neon SQL Editor, copy connection string vào `.env.local`, rồi chạy lại
-`npm run dev`.
-
 ## Triển khai lên GitHub + Vercel
 
 Dưới đây là hướng dẫn triển khai dự án **`crm_444`** được định dạng lại đẹp mắt bằng Markdown, tối ưu cho việc đọc và theo dõi từng bước.
@@ -180,18 +165,6 @@ Dự án được xây dựng bằng **Next.js**, Vercel sẽ tự động tối
   số liệu" để xem trước, "Lưu vào bảng xếp hạng" để công bố. Có thể xóa hẳn một kỳ nếu cần làm
   lại từ đầu.
 
-## Di chuyển (migrate) dữ liệu khi hệ thống đổi cách tính điểm
-
-Mỗi khi logic tính điểm cốt lõi thay đổi (ví dụ: đổi cách đối chiếu phòng, đổi phạm vi RM được
-tính...), các kỳ đã tải **trước đó** vẫn đang lưu dữ liệu theo cách tính cũ, không tương thích
-với kết quả mới. Hệ thống tự phát hiện việc này qua `schemaVersion` gắn trên mỗi file đã xử lý
-(xem `PARTIAL_SCHEMA_VERSION` trong `lib/aggregate.js`) và sẽ **không** cho dùng lại file ở phiên
-bản cũ — ô tương ứng hiện "Dữ liệu cũ — cần tải lại" (màu cam) thay vì "Đã có" (màu xanh).
-
-**Cách xử lý:** với mỗi kỳ đã tải trước đó, vào Quản trị, chọn lại đúng tháng đó, rồi tải lại
-**đủ cả 5 file gốc** của kỳ đó (không thể chỉ tải 1 file rồi dùng lại 4 file cũ, vì 4 file cũ
-không dùng được nữa). Sau khi lưu, kỳ đó sẽ ở phiên bản mới và từ lần sau có thể sửa từng file
-riêng lẻ bình thường. Các kỳ tạo mới từ bây giờ trở đi không bị ảnh hưởng.
 
 ## Tab Cảnh báo — cán bộ có điểm thấp hơn 30% bình quân chi nhánh
 
@@ -213,42 +186,6 @@ Ngưỡng cảnh báo = 30% × Điểm bình quân/RM
 Trang hiển thị: điểm bình quân, ngưỡng cảnh báo, số/tỷ lệ RM bị cảnh báo, số RM cảnh báo theo
 từng phòng, và bảng chi tiết từng RM (sắp xếp điểm thấp nhất lên đầu) kèm mức độ nghiêm trọng
 (badge màu theo % so với bình quân: ≤10% đỏ, ≤20% cam, còn lại vàng).
-
-## Đối chiếu Phòng bằng MÃ PHÒNG (không dùng tên phòng)
-
-4 file CRM và file danh sách biên chế được đối chiếu theo **mã phòng**, không theo tên phòng —
-tránh sai lệch do viết hoa/thường, thừa/thiếu dấu cách, hay cách viết tắt khác nhau giữa các
-nguồn dữ liệu. Tên phòng chỉ dùng để hiển thị trên giao diện.
-
-Hai định dạng mã phòng được tự động quy đổi về cùng một chuẩn:
-- **4 file CRM** dùng mã 5 ký tự dạng `444xx` (cột "Mã phòng").
-- **File biên chế PeopleSoft** thường dùng mã 9 ký tự dạng `0444xx000` (cột có tên chứa "Mã
-  phòng", ví dụ "Mã phòng ban") — hệ thống tự cắt số 0 đầu và 3 số 0 cuối để quy về `444xx`.
-
-Cột nhận diện RM trong file biên chế cũng được mở rộng, chấp nhận thêm `Email/AD`, `Email`, `AD`,
-`Mã đăng nhập` bên cạnh các tên cột đã hỗ trợ trước đó.
-
-**Chỉ tính trên RM có trong file biên chế — nhất quán ở CẢ 3 CẤP:** vì mục tiêu chương trình
-thi đua là tính trên RM biên chế, hệ thống lọc bỏ hoàn toàn hoạt động của các RM không có tên
-trong file biên chế **trước khi** cộng dồn — áp dụng cho cả điểm RM, điểm Phòng, và số liệu Chi
-nhánh (kể cả mốc điểm bình quân ở tab Cảnh báo). Không phải chỉ ẩn RM lạ khỏi bảng xếp hạng cá
-nhân mà vẫn cộng ngầm vào điểm Phòng — đóng góp của RM ngoài biên chế bị loại khỏi mọi con số.
-
-## Tiêu chí công văn dùng SỐ LƯỢNG, không dùng tỷ lệ %
-
-Cả công thức tính điểm và giao diện hiển thị đều dùng **số lượng tuyệt đối** Lead/Opp có tương
-tác — đúng nguyên văn Mục 6.1 và 6.2 Công văn 7087 ("Số lượng Lead/Opp có thông tin tương tác,
-tiếp cận"). Không có chỉ số tỷ lệ % nào được dùng trong công thức hay hiển thị trên bảng xếp
-hạng, để tránh gây hiểu nhầm đây là một tiêu chí xét thưởng.
-
-
-
-Mỗi file trong 5 file được xử lý **ngay trên trình duyệt** của admin thành một "partial" — số
-liệu đã tổng hợp theo Phòng/RM (số lượng Lead, Opp, tỷ lệ...) — **trước khi** gửi lên server.
-Partial này **không chứa** tên khách hàng, CIF, hay mã số thuế. Server chỉ lưu các partial đã ẩn
-danh này, nên khi cần lấy lại dữ liệu của 4 file không đổi để gộp cùng 1 file mới, hệ thống lấy
-lại đúng các partial đó — dữ liệu khách hàng gốc chưa từng và sẽ không bao giờ được lưu trên
-server.
 
 ## Công thức tính điểm (đúng theo Công văn 7087)
 
