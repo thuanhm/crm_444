@@ -87,7 +87,7 @@ postgresql://username:password@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmo
 
 
 
-3. **Đẩy code lên bằng GitHub Desktop:**
+3. **Đẩy code lên bằng GitHub Desktop (hoặc tự upload):**
 * Mở ứng dụng **GitHub Desktop**.
 * Chọn **File** $\rightarrow$ **Add Local Repository...** $\rightarrow$ Chọn thư mục `crm_444-main`.
 
