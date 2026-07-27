@@ -32,7 +32,7 @@ function DataTable({ rows, kind }) {
             <th>Lead giao</th>
             <th>Lead/Opp<br />có tương tác</th>
             <th>Lead → Opp</th>
-            <th>Opp thành công</th>
+            <th>Opp<br />thành công</th>
             <th>Điểm thi đua</th>
           </tr>
         </thead>
