@@ -67,6 +67,8 @@ table{width:100%; border-collapse:collapse; font-size:13.5px;}
 thead th{
   background:#F3F6FA; color:var(--navy-dark); text-align:left; padding:11px 12px; font-size:11.5px;
   text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--line); white-space:nowrap;
+  vertical-align:middle;   /* thêm dòng này */
+  line-height:1.35;        /* và dòng này cho 2 hàng đỡ dính nhau */
 }
 tbody td{padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap;}
 tbody tr:last-child td{border-bottom:none;}
