@@ -195,9 +195,9 @@ export default function CanhBao() {
                       <th>Cán bộ (RM)</th>
                       <th>Phòng</th>
                       <th>Lead giao</th>
-                      <th>Lead/Opp có tương tác</th>
+                      <th>Lead/Opp <br />có tương tác</th>
                       <th>Lead → Opp</th>
-                      <th>Opp thành công</th>
+                      <th>Opp <br />thành công</th>
                       <th>Điểm thi đua</th>
                       <th>So với bình quân CN</th>
                     </tr>
