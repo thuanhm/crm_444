@@ -78,9 +78,9 @@ function DataTable({ rows, kind }) {
             {kind === 'rm' && <th>Phòng</th>}
             {kind === 'phong' && <th>Số RM</th>}
             <th>Lead giao</th>
-            <th>Lead/Opp có tương tác</th>
+            <th>Lead/Opp <br />có tương tác</th>
             <th>Lead → Opp</th>
-            <th>Opp thành công</th>
+            <th>Opp <br />thành công</th>
             <th>Điểm thi đua</th>
           </tr>
         </thead>
