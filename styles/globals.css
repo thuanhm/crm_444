@@ -170,7 +170,7 @@ footer{text-align:center; padding:26px; font-size:12px; color:var(--muted);}
 
   /* Bảng: cho phép cuộn ngang mượt trên iOS, giảm padding ô để đỡ chật */
   .panel{-webkit-overflow-scrolling:touch;}
-  table{font-size:12.5px;}
+  table{font-size:12px;}
   thead th{padding:9px 8px; font-size:10.5px;}
   tbody td{padding:8px 8px;}
 
