@@ -15,7 +15,7 @@
   --radius:14px;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Be Vietnam Pro',sans-serif;-webkit-font-smoothing:antialiased;}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Glory','Be Vietnam Pro',sans-serif;-webkit-font-smoothing:antialiased;}
 
 .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
 
