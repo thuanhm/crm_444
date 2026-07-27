@@ -1,10 +1,3 @@
-@font-face{
-  font-family:'SVN-Gilroy';
-  src:url('/styles/SVN-Gilroy.woff2') format('woff2');
-  font-weight:400;
-  font-style:normal;
-  font-display:swap;
-}
 :root{
   --navy-dark:#00203F;
   --navy:#004A8F;
@@ -22,7 +15,7 @@
   --radius:14px;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'SVN-Gilroy','Be Vietnam Pro',sans-serif;-webkit-font-smoothing:antialiased;}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
 
 .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
 
