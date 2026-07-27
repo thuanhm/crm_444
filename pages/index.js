@@ -8,6 +8,54 @@ function rankBadge(i) {
   return i + 1;
 }
 
+// Thư viện xlsx (~500KB) chỉ nạp khi người dùng thực sự bấm nút xuất, tránh làm nặng trang công khai.
+let xlsxModulePromise = null;
+function loadXLSX() {
+  if (!xlsxModulePromise) xlsxModulePromise = import('xlsx');
+  return xlsxModulePromise;
+}
+
+async function exportXlsx(rows, kind, monthLabel) {
+  if (!rows.length) return;
+  const XLSX = await loadXLSX();
+  const isPhong = kind === 'phong';
+
+  const header = isPhong
+    ? ['Hạng', 'Phòng / PGD', 'Số RM', 'Lead giao', 'Lead/Opp có tương tác', 'Lead → Opp', 'Opp thành công', 'Điểm thi đua']
+    : ['Hạng', 'Cán bộ (RM)', 'Phòng', 'Lead giao', 'Lead/Opp có tương tác', 'Lead → Opp', 'Opp thành công', 'Điểm thi đua'];
+
+  const body = rows.map((r, i) => [
+    r.diem === null || r.diem === undefined ? '' : i + 1,
+    isPhong ? r.label || r.key : r.key,
+    isPhong ? r.soRM || '' : r.phongLabel || r.phong || '',
+    r.leadGiao,
+    (r.leadTuongTac || 0) + (r.oppTuongTac || 0),
+    r.leadChuyenDoi,
+    r.oppThanhCong,
+    r.diem === null || r.diem === undefined ? '' : r.diem,
+  ]);
+
+  const tieuDe = isPhong ? 'XẾP HẠNG THEO PHÒNG / PGD' : 'XẾP HẠNG THEO CÁN BỘ (RM)';
+  const aoa = [
+    ['VIETINBANK — CHI NHÁNH BẮC NGHỆ AN'],
+    ['Bảng điểm thi đua CRM 1.0 Transformation 2026 — ' + tieuDe],
+    ['Kỳ xét thưởng: ' + (monthLabel || '—')],
+    [],
+    header,
+    ...body,
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = header.map((h, i) => ({ wch: i === 1 ? 34 : Math.max(12, h.length + 3) }));
+  ws['!merges'] = [0, 1, 2].map((r) => ({ s: { r, c: 0 }, e: { r, c: header.length - 1 } }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, isPhong ? 'Phong-PGD' : 'Can bo RM');
+
+  const stamp = (monthLabel || 'du-lieu').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^0-9A-Za-z]+/g, '-');
+  XLSX.writeFile(wb, `Thi-dua-CRM_${isPhong ? 'Phong' : 'RM'}_${stamp}.xlsx`);
+}
+
 function DataTable({ rows, kind }) {
   if (!rows.length) {
     return (
@@ -30,9 +78,9 @@ function DataTable({ rows, kind }) {
             {kind === 'rm' && <th>Phòng</th>}
             {kind === 'phong' && <th>Số RM</th>}
             <th>Lead giao</th>
-            <th>Lead/Opp<br />có tương tác</th>
+            <th>Lead/Opp có tương tác</th>
             <th>Lead → Opp</th>
-            <th>Opp<br />thành công</th>
+            <th>Opp thành công</th>
             <th>Điểm thi đua</th>
           </tr>
         </thead>
@@ -98,6 +146,11 @@ export default function Home() {
         : arr;
     return { phong: filt(data.phong || []), rm: filt(data.rm || []) };
   }, [data, query]);
+
+  const monthLabel =
+    selected === '__all__'
+      ? 'Lũy kế tất cả các kỳ'
+      : months.find((m) => m.key === selected)?.label || selected;
 
   const s = data?.summary || {};
   const tyLeChung = s.leadGiao ? ((100 * s.leadTuongTac) / s.leadGiao).toFixed(1) : '0.0';
@@ -172,7 +225,7 @@ export default function Home() {
             <div className="stat-grid">
               <div className="stat-card">
                 <div className="num">{(s.leadGiao || 0).toLocaleString('vi-VN')}</div>
-                <div className="lbl">Lead đã phân giao RM</div>
+                <div className="lbl">Lead đã phân giao</div>
               </div>
               <div className="stat-card">
                 <div className="num">{(s.leadTuongTac || 0).toLocaleString('vi-VN')}</div>
@@ -199,12 +252,26 @@ export default function Home() {
             <div className="section-title">
               <h2>Xếp hạng theo Phòng / PGD</h2>
               <span className="count-pill">{filtered.phong.length}</span>
+              <button
+                className="btn secondary export-btn"
+                onClick={() => exportXlsx(filtered.phong, 'phong', monthLabel)}
+                disabled={!filtered.phong.length}
+              >
+                ⬇ Xuất Excel
+              </button>
             </div>
             <DataTable rows={filtered.phong} kind="phong" />
 
             <div className="section-title">
               <h2>Xếp hạng theo Cán bộ (RM)</h2>
               <span className="count-pill">{filtered.rm.length}</span>
+              <button
+                className="btn secondary export-btn"
+                onClick={() => exportXlsx(filtered.rm, 'rm', monthLabel)}
+                disabled={!filtered.rm.length}
+              >
+                ⬇ Xuất Excel
+              </button>
             </div>
             <DataTable rows={filtered.rm} kind="rm" />
           </>
