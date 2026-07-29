@@ -33,7 +33,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Không lưu được dữ liệu. Kiểm tra kết nối Postgres.' });
+      // Kèm nguyên nhân gốc từ Postgres (vd: relation "thidua_partials" does not exist) để
+      // chẩn đoán được ngay trên giao diện, không phải mở log Vercel.
+      return res.status(500).json({ error: `Không lưu được dữ liệu: ${err.message}` });
     }
   }
 
