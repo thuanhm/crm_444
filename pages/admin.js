@@ -241,7 +241,19 @@ export default function Admin() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileType, partial }),
         });
-        if (!r.ok) throw new Error('Lưu partial thất bại: ' + fileType);
+        if (!r.ok) {
+          // Đọc lý do thật từ server thay vì chỉ báo tên file — giúp phân biệt ngay các nguyên
+          // nhân thường gặp: 401 (hết phiên đăng nhập), 500 (chưa tạo bảng / sai DATABASE_URL).
+          const res = await r.json().catch(() => ({}));
+          const label = FILE_TYPES.find((f) => f.type === fileType)?.label || fileType;
+          let reason = res.error || `Server trả về mã lỗi ${r.status}.`;
+          if (r.status === 401) {
+            reason = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại, rồi thực hiện lại từ đầu.';
+          } else if (r.status === 500) {
+            reason += ' Kiểm tra: đã chạy db/schema.sql trong Neon SQL Editor để tạo bảng thidua_partials chưa, và biến DATABASE_URL trên Vercel đã đúng chưa.';
+          }
+          throw new Error(`Lưu thất bại ở file "${label}": ${reason}`);
+        }
       }
 
       // Lưu kết quả cuối cùng (phong/rm/summary) để hiển thị công khai.
@@ -252,7 +264,11 @@ export default function Admin() {
       });
       if (!r2.ok) {
         const res = await r2.json().catch(() => ({}));
-        throw new Error(res.error || 'Lưu thất bại.');
+        let reason = res.error || `Server trả về mã lỗi ${r2.status}.`;
+        if (r2.status === 401) {
+          reason = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại, rồi thực hiện lại từ đầu.';
+        }
+        throw new Error('Lưu bảng xếp hạng thất bại: ' + reason);
       }
 
       setMsg({ type: 'success', text: `Đã lưu dữ liệu kỳ ${monthLabel(key)} vào bảng xếp hạng công khai.` });
