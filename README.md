@@ -72,7 +72,7 @@ postgresql://username:password@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmo
 ## 🔹 Bước 2: Tải Mã Nguồn Lên GitHub
 
 1. **Chuẩn bị file code:**
-* Giải nén file chứa thư mục `crm_444-main` trên máy tính.
+* Giải nén file mã nguồn đã tải về mà có chứa thư mục `crm_444-main` trên máy tính.
 
 
 
