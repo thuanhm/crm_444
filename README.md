@@ -87,16 +87,9 @@ postgresql://username:password@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmo
 
 
 
-3. **Đẩy code lên bằng GitHub Desktop (nếu không dùng app này thì hoặc tự upload kéo thả lên cho nhanh cũng được):**
-* Mở ứng dụng **GitHub Desktop**.
-* Chọn **File** $\rightarrow$ **Add Local Repository...** $\rightarrow$ Chọn thư mục `crm_444-main`.
-
-
-* Nếu phần mềm yêu cầu khởi tạo Git, nhấn **Create a repository**.
-* Ở góc dưới bên trái, điền mô tả commit (ví dụ: `Initial commit`) $\rightarrow$ Nhấn **Commit to main**.
-* Nhấn **Publish repository** ở thanh công cụ phía trên để đẩy toàn bộ code lên GitHub.
-
-
+3. **Đẩy code lên tài khoản Githup:**
+* Trong trang githup, phần Quick Setup chọn *uploading an existing file**
+* Kéo thả tất cả file và folder trên máy tính vào phần cửa sổ trang githup*
 
 ---
 
